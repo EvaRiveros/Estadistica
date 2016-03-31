@@ -16,4 +16,4 @@ for x in xrange(0,999):
 
 
 print prob
-print i
+print i #numero de veces en que x=18
