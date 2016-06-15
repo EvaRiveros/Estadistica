@@ -121,6 +121,11 @@ ylda=pend*xlda+inter
 sigma1=np.zeros((2,2))
 sigma0=np.zeros((2,2))
 
+def d0(array):
+	return -0.5*(np.log(np.linalg.det(sigma0))+np.dot(np.transpose(array-mu[0,:]),np.dot(np.linalg.inv(sigma0),array-mu[0,:])))+np.log(p[0])
+
+def d1(array):
+	return -0.5*(np.log(np.linalg.det(sigma1))+np.dot(np.transpose(array-mu[1,:]),np.dot(np.linalg.inv(sigma1),array-mu[1,:])))+np.log(p[1])
 
 suma0=0
 suma1=0
@@ -151,19 +156,6 @@ for i in xrange(0,N1):
 sigma0[1,0]=sigma0[0,1]=suma0/N0
 sigma1[1,0]=sigma1[0,1]=suma1/N1
 
-# tuplas0=np.zeros((N0,2))
-# tuplas1=np.zeros((N1,2))
-
-# tuplas0[:,0]=x0
-# tuplas0[:,1]=y0
-# tuplas1[:,0]=x1
-# tuplas1[:,1]=y1
-
-def d0(array):
-	return -0.5*(np.log(np.linalg.det(sigma0))+np.dot(np.transpose(array-mu[0,:]),np.dot(np.linalg.inv(sigma0),array-mu[0,:])))+np.log(p[0])
-
-def d1(array):
-	return -0.5*(np.log(np.linalg.det(sigma1))+np.dot(np.transpose(array-mu[1,:]),np.dot(np.linalg.inv(sigma1),array-mu[1,:])))+np.log(p[1])
 
 xlin=np.linspace(0,10,100)
 ylin=np.linspace(0,10,100)
@@ -221,15 +213,79 @@ def confusion(modelo,real):
 	m[0,1]=sum(np.logical_and(modelo==1,real==0))
 	return m
 
+def MR(matriz):
+	return (matriz[1,0]+matriz[0,1])/N
+
 c1=confusion(pred_RL,tag)
 c2=confusion(pred_QDA,tag)
 c3=confusion(pred_KN,tag)
 c4=confusion(pred_SVC,tag)
 
-print "Matrices de confusion:"
+print "Matrices de confusion y Misclassification Rate (MR):"
 print "-Regresion lineal y LDA\n",c1
+print "MR=", MR(c1)
 print "-QDA\n",c2
+print "MR=", MR(c2)
 print "-Nearest neighbors (3)\n",c3
+print "MR=", MR(c3)
 print "-Support vector machines (RBF)\n",c4
+print "MR=", MR(c4)
 
 
+######################################################################
+
+sigmanuevo1=np.zeros((2,2))
+sigmanuevo2=np.zeros((2,2))
+munuevo1=np.array([2,3])
+munuevo2=np.array([6,6])
+
+sigmanuevo1[0,0]=5
+sigmanuevo1[1,0]=-2
+sigmanuevo1[0,1]=-2
+sigmanuevo1[1,1]=5
+
+sigmanuevo2[0,0]=1
+sigmanuevo2[1,0]=0
+sigmanuevo2[0,1]=0
+sigmanuevo2[1,1]=1
+
+xreal=np.array([0])
+yreal=np.array([0])
+k=0
+
+for i in xrange(0,np.size(xlin)):
+	for j in xrange(0,np.size(xlin)):
+		a=np.array([xlin[i],ylin[j]])
+		delta1=-0.5*(np.log(np.linalg.det(sigmanuevo1))+np.dot(np.transpose(a-munuevo1),np.dot(np.linalg.inv(sigmanuevo1),a-munuevo1)))+np.log(p[0])
+		delta2=-0.5*(np.log(np.linalg.det(sigmanuevo2))+np.dot(np.transpose(a-munuevo2),np.dot(np.linalg.inv(sigmanuevo2),a-munuevo2)))+np.log(p[1])
+
+		if (math.fabs(delta1-delta2)<0.1):
+			if (k==0):
+				xreal[0]=a[0]
+				yreal[0]=a[1]
+				k+=1
+			xreal=np.append(xreal,a[0])
+			yreal=np.append(yreal,a[1])
+
+pred_QDAR=np.ones(np.size(P))
+for x in xrange(0,N):
+	delta1=-0.5*(np.log(np.linalg.det(sigmanuevo1))+np.dot(np.transpose(X[x]-munuevo1),np.dot(np.linalg.inv(sigmanuevo1),X[x]-munuevo1)))+np.log(p[0])
+	delta2=-0.5*(np.log(np.linalg.det(sigmanuevo2))+np.dot(np.transpose(X[x]-munuevo2),np.dot(np.linalg.inv(sigmanuevo2),X[x]-munuevo2)))+np.log(p[1])
+
+	if (delta1>delta2):
+		pred_QDAR[x]=0
+
+
+plt.plot(x0,y0,'o')
+plt.plot(x1,y1,'o')
+plt.plot(xrecta,yrecta)
+plt.plot(xqda,yqda,'+')
+plt.plot(xlda,ylda,'k^')
+plt.plot(xreal,yreal,'m*')
+plt.title('Decision boundaries para RL (recta), LDA (triangulos), QDA (curva cian), y modelo real (parte c, * magentas)')
+plt.plot()
+plt.show()
+
+c5=confusion(pred_QDAR,tag)
+print "-QDA con modelo real\n",c5
+print "MR=", MR(c5)
