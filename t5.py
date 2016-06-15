@@ -192,7 +192,8 @@ plt.plot(x0,y0,'o')
 plt.plot(x1,y1,'o')
 plt.plot(xrecta,yrecta)
 plt.plot(xqda,yqda,'+')
-# plt.plot(xlda,ylda,'k^')
+plt.plot(xlda,ylda,'k^')
+plt.title('Decision boundaries para RL (recta), LDA (triangulos), y QDA (curva cian)')
 plt.plot()
 plt.show()
 
@@ -225,9 +226,10 @@ c2=confusion(pred_QDA,tag)
 c3=confusion(pred_KN,tag)
 c4=confusion(pred_SVC,tag)
 
-print c1
-print c2
-print c3
-print c4
+print "Matrices de confusion:"
+print "-Regresion lineal y LDA\n",c1
+print "-QDA\n",c2
+print "-Nearest neighbors (3)\n",c3
+print "-Support vector machines (RBF)\n",c4
 
 
